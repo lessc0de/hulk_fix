@@ -2,7 +2,10 @@ cmake_minimum_required( VERSION 2.8 )
 project( hulk-fix )
 
 include_directories( include )
+include_directories( ~/hulk-core/include )
+link_directories( ~/hulk-build/core/src )
 add_subdirectory( src )
+add_subdirectory( test )
 
 install( FILES include/hulk/fix/decoder.h DESTINATION include/hulk/fix )
 install( FILES include/hulk/fix/message.h DESTINATION include/hulk/fix )
