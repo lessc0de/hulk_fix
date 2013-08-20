@@ -55,12 +55,12 @@ void session::send( const value& msg_type, const fields& body )
     bodyStr << MSG_SEQ_NUM << "=" << ++_seq_out << DELIM;
     bodyStr << SENDING_TIME << "=" << send_time << DELIM;
 
-    for( fields::const_iterator it = _header.begin(); it != _header.end(); it++ ) {
-        bodyStr << it->first << "=" << it->second << DELIM;
+    for( int i=0; i<_header.size(); i++ ) {
+        bodyStr << _header[i]._tag << "=" << _header[i]._value << DELIM;
     }
 
-    for( fields::const_iterator it = body.begin(); it != body.end(); it++ ) {
-        bodyStr << it->first << "=" << it->second << DELIM;
+    for( int j=0; j<body.size(); j++ ) {
+        bodyStr << body[j]._tag << "=" << body[j]._value << DELIM;
     }
 
     int length = bodyStr.str().length();

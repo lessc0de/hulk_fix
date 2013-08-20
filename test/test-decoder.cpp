@@ -7,23 +7,6 @@
 
 using namespace hulk;
 
-struct my_publisher : public fix::session::publisher
-{
-    virtual void publish( const std::string& msg ) {
-        std::cout << "publish: " << msg << std::endl;
-    }
-};
-
-struct my_processor : public fix::session::processor
-{
-    virtual void process( const fix::fields& msg )
-    {
-        for( fix::fields::const_iterator it = msg.begin(); it != msg.end(); it++ ) {
-            std::cout << "field " << it->first << "=" << it->second << std::endl;
-        }
-    }
-};
-
 void
 build_nos( std::string& str )
 {
@@ -54,21 +37,32 @@ build_nos( std::string& str )
     str = body.str();
 }
 
+void print_fields( const fix::fields& f )
+{
+    for( int i=0; i<f.size(); i++ ) {
+        std::cout << f[i]._tag << " = " << f[i]._value << std::endl;
+    }
+}
+
+class decoder_callback
+{
+public:
+    void operator()( const fix::fields& header, const fix::fields& body )
+    {
+        std::cout << "\nheader\n";
+        print_fields( header );
+
+        std::cout << "\nbody\n";
+        print_fields( body );
+    }
+};
+
 int main( int argc, char** argv )
 {
-    const char* host = "localhost";
-    const int port = 8000;
-
-    my_publisher mpub;
-    my_processor mprc;
-
-    fix::fields flds;
-    flds[49] = "SENDER";
-    flds[56] = "TARGET";
-    fix::session session( "FIX.4.4", flds, mpub, mprc );
-
     std::string nos;
     build_nos( nos );
-    fix::decoder decoder( session );
-    decoder.decode( nos.c_str(), nos.size() );
+
+    fix::decoder decoder;
+    decoder_callback cb;
+    decoder.decode( cb, nos.c_str(), nos.size() );
 }

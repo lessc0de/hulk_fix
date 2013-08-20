@@ -59,14 +59,14 @@ int main( int argc, char** argv )
     client_send_handler csh( fd );
     client_recv_handler crh;
     fix::fields header;
-    header[49] = "BANZAI";
-    header[56] = "EXEC";
+    header.push_back( fix::field( 49, "BANZAI" ) );
+    header.push_back( fix::field( 59, "EXEC" ) );
     fix::session session( "FIX.4.4", header, csh, crh );
 
     LOG_INFO( l, "sending logon" );
     fix::fields body;
-    body[98] = "0";
-    body[108] = "30";
+    header.push_back( fix::field(  98, "0" ) );
+    header.push_back( fix::field( 108, "30" ) );
     session.send( "A", body );
 
     LOG_INFO( l, "starting event loop" );
