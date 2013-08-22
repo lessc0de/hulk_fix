@@ -60,7 +60,7 @@ int main( int argc, char** argv )
     client_recv_handler crh;
     fix::fields header;
     header.push_back( fix::field( 49, "BANZAI" ) );
-    header.push_back( fix::field( 59, "EXEC" ) );
+    header.push_back( fix::field( 56, "EXEC" ) );
     fix::session session( "FIX.4.4", header, csh, crh );
 
     LOG_INFO( l, "sending logon" );
@@ -71,8 +71,8 @@ int main( int argc, char** argv )
 
     LOG_INFO( l, "starting event loop" );
     client_callback cb;
-    tcp::event_loop el( 1024, cb );
-    el.watch( fd, false );
+    tcp::event_loop el( 1024 );
+    el.watch( fd, false, cb );
     while( 1 ) {
         el.loop();
     }

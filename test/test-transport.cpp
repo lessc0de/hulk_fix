@@ -1,6 +1,5 @@
 
-#include <hulk/fix/decoder.h>
-#include <hulk/fix/session.h>
+#include "hulk/fix/transport.h"
 
 #include <iostream>
 #include <sstream>
@@ -37,27 +36,28 @@ build_nos( std::string& str )
     str = body.str();
 }
 
-void print_fields( const fix::fields& f )
-{
-    for( int i=0; i<f.size(); i++ ) {
-        std::cout << f[i]._tag << " = " << f[i]._value << std::endl;
-    }
-}
-
-class decoder_callback
+class my_session : public fix::session
 {
 public:
-    void operator()( const fix::fields& msg ) {
-        print_fields( msg );
+    my_session( const fix::value& protocol, const fix::fields& header, fix::transport& transport )
+    : session( protocol, header, transport ) {}
+
+    virtual void recv( const fix::fields& msg ) {
+        std::cout << "recv: " << msg.size() << " fields" << std::endl;
     }
 };
 
 int main( int argc, char** argv )
 {
+    fix::fields flds;
+    flds.push_back( fix::field( 49, "SENDER" ) );
+    flds.push_back( fix::field( 56, "TARGET" ) );
+
     std::string nos;
     build_nos( nos );
 
-    fix::decoder decoder;
-    decoder_callback cb;
-    decoder.decode( cb, nos.c_str(), nos.size() );
+    fix::transport transport;
+    my_session session( "FIX.4.4", flds, transport );
+    transport.set_session( session );
+    transport.recv( nos.c_str(), nos.size() );
 }

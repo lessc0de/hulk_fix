@@ -13,8 +13,7 @@ void decoder::init_state()
 {
     _tag.clear();
     _val.clear();
-    _header.clear();
-    _body.clear();
+    _msg.clear();
     _field_state = TAG;
     _message_state = SEEK_HEADER;
 }

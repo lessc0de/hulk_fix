@@ -1,5 +1,6 @@
 
 #include "hulk/fix/session.h"
+#include "hulk/fix/transport.h"
 
 #include <cstdio>
 #include <ctime>
@@ -34,16 +35,19 @@ void set_utc_time( std::string& s, time_t* t )
 }
 }
 
-session::session( const value& protocol, const fields& header, send_handler& sh, recv_handler& rh )
+session::session( const value& protocol, const fields& header, transport& t )
 : _protocol( protocol ),
   _header( header ),
+  _transport( t ),
   _seq_in( 0 ),
-  _seq_out( 0 ),
-  _send_handler( sh ),
-  _recv_handler( rh )
+  _seq_out( 0 )
 {
+    _transport.set_session( *this );
 }
 
+// TODO
+// encoding is a bit shit
+// too reliant on string streams
 void session::send( const value& msg_type, const fields& body )
 {
     std::string send_time;
@@ -81,10 +85,6 @@ void session::send( const value& msg_type, const fields& body )
 
     msgStr << CHECK_SUM << "=" << buf << DELIM;
 
-    _send_handler.send( msgStr.str() );
-}
-
-void session::recv( const fields& msg )
-{
-    _recv_handler.recv( msg );
+    s = msgStr.str();
+    _transport.send( s.c_str(), s.size() );
 }

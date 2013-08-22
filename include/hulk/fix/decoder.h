@@ -35,8 +35,7 @@ private:
     std::string _tag;
     std::string _val;
 
-    fields _header;
-    fields _body;
+    fields _msg;
 };
 
 template< class TCallback >
@@ -86,11 +85,7 @@ void decoder::on_field( TCallback cb )
         return; // error
     }
 
-    if( is_header( tag ) ) {
-        _header.push_back( field( tag, _val ) );
-    } else {
-        _body.push_back( field( tag, _val ) );
-    }
+    _msg.push_back( field( tag, _val ) );
 
     if( _message_state == SEEK_HEADER )
     {
@@ -102,7 +97,7 @@ void decoder::on_field( TCallback cb )
     {
         if( tag == 10 )
         {
-            cb( _header, _body );
+            cb( _msg );
             init_state();
         }
     }
