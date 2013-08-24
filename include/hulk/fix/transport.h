@@ -29,20 +29,6 @@ private:
 };
 
 // -----------------------------------------------------------------------------
-class tcp_transport : public transport
-{
-public:
-    inline tcp_transport( int fd );
-    inline int get_fd();
-
-    inline virtual void send( const char* msg, size_t len );
-    virtual ~tcp_transport() {}
-
-private:
-    int _fd;
-};
-
-// -----------------------------------------------------------------------------
 transport::transport() : _session( 0 )
 {
 }
@@ -67,21 +53,6 @@ void transport::set_session( session& s )
 void transport::operator()( const fields& msg )
 {
     recv( msg );
-}
-
-// -----------------------------------------------------------------------------
-tcp_transport::tcp_transport( int fd ) : _fd( fd )
-{
-}
-
-int tcp_transport::get_fd()
-{
-    return _fd;
-}
-
-void tcp_transport::send( const char* msg, size_t len )
-{
-    ::send( _fd, msg, len, 0 );
 }
 
 }

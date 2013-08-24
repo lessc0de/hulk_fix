@@ -1,11 +1,13 @@
 
 #include "hulk/fix/session.h"
 #include "hulk/fix/transport.h"
+#include "hulk/core/logger.h"
 
 #include <cstdio>
 #include <ctime>
 #include <sstream>
 
+using namespace hulk;
 using namespace hulk::fix;
 
 #define BEGIN_STRING 8
@@ -18,6 +20,8 @@ using namespace hulk::fix;
 
 namespace
 {
+core::log& l = core::logger::instance().get( "hulk.fix" );
+
 void set_utc_time( std::string& s, time_t* t )
 {
     struct tm* utc = gmtime( t );
@@ -86,5 +90,8 @@ void session::send( const value& msg_type, const fields& body )
     msgStr << CHECK_SUM << "=" << buf << DELIM;
 
     s = msgStr.str();
+
+    LOG_INFO( l, "sending: " << s.c_str() );
+
     _transport.send( s.c_str(), s.size() );
 }
