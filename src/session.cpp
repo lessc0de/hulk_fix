@@ -20,7 +20,7 @@ using namespace hulk::fix;
 
 namespace
 {
-core::log& l = core::logger::instance().get( "hulk.fix" );
+core::log& log = core::logger::instance().get( "hulk.fix" );
 
 void set_utc_time( std::string& s, time_t* t )
 {
@@ -39,6 +39,15 @@ void set_utc_time( std::string& s, time_t* t )
 }
 }
 
+session::session( transport& t )
+: _transport( t ),
+  _seq_in( 0 ),
+  _seq_out( 0 )
+{
+    LOG_INFO( log, "created session @ " << this );
+    _transport.set_session( *this );
+}
+
 session::session( const value& protocol, const fields& header, transport& t )
 : _protocol( protocol ),
   _header( header ),
@@ -46,7 +55,18 @@ session::session( const value& protocol, const fields& header, transport& t )
   _seq_in( 0 ),
   _seq_out( 0 )
 {
+    LOG_INFO( log, "created session @ " << this );
     _transport.set_session( *this );
+}
+
+session::~session()
+{
+    LOG_INFO( log, "deleted session @ " << this );
+}
+
+void session::recv( const fields& msg )
+{
+    LOG_INFO( log, "recvd " << msg.size() << " fields\n" );
 }
 
 // TODO
@@ -91,7 +111,7 @@ void session::send( const value& msg_type, const fields& body )
 
     s = msgStr.str();
 
-    LOG_INFO( l, "sending: " << s.c_str() );
+    LOG_INFO( log, "sending: " << s.c_str() );
 
     _transport.send( s.c_str(), s.size() );
 }

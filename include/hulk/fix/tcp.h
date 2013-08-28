@@ -5,6 +5,8 @@
 #include "hulk/core/tcp.h"
 #include "hulk/fix/transport.h"
 
+#include <map>
+
 namespace hulk {
 namespace  fix {
 
@@ -23,9 +25,9 @@ private:
 };
 
 // -----------------------------------------------------------------------------
-struct tcp_callback : public ::hulk::core::tcp::callback
+struct tcp_initiator_callback : public ::hulk::core::tcp::callback
 {
-    tcp_callback( tcp_transport& t ) : _transport( t ) {}
+    tcp_initiator_callback( tcp_transport& t ) : _transport( t ) {}
 
     virtual void on_open( int fd ) {}
     virtual void on_close( int fd ) {}
@@ -35,11 +37,25 @@ struct tcp_callback : public ::hulk::core::tcp::callback
 };
 
 // -----------------------------------------------------------------------------
+struct tcp_acceptor_callback : public ::hulk::core::tcp::callback
+{
+    tcp_acceptor_callback() {}
+
+    virtual void on_open( int fd ) {}
+    virtual void on_close( int fd );
+    virtual void on_recv( int fd, const char* data, size_t len );
+
+    typedef std::map< int, tcp_transport* > transport_map;
+    transport_map _transports;;
+};
+
+// -----------------------------------------------------------------------------
 class tcp_event_loop
 {
 public:
     template< class TSession >
     TSession* new_initiator( const char* host, int port, const value& protocol, const fields& header );
+    void new_acceptor( int port );
 
     int loop( int timeout=0 );
 
@@ -63,9 +79,39 @@ void tcp_transport::send( const char* msg, size_t len )
 }
 
 // -----------------------------------------------------------------------------
-void tcp_callback::on_recv( int fd, const char* data, size_t len )
+void tcp_initiator_callback::on_recv( int fd, const char* data, size_t len )
 {
     _transport.recv( data, len );
+}
+
+// -----------------------------------------------------------------------------
+void tcp_acceptor_callback::on_close( int fd )
+{
+    transport_map::iterator it = _transports.find( fd );
+    if( it != _transports.end() )
+    {
+        delete it->second->get_session();
+        delete it->second;
+        _transports.erase( it );
+    }
+}
+
+void tcp_acceptor_callback::on_recv( int fd, const char* data, size_t len )
+{
+    tcp_transport* transport;
+    transport_map::iterator it = _transports.find( fd );
+    if( it == _transports.end() )
+    {
+        transport = new tcp_transport( fd );
+        new session( *transport );
+        _transports[fd] = transport;
+    }
+    else
+    {
+        transport = it->second;
+    }
+
+    transport->recv( data, len );
 }
 
 // -----------------------------------------------------------------------------
@@ -75,8 +121,15 @@ TSession* tcp_event_loop::new_initiator( const char* host, int port, const value
     int fd = ::hulk::core::tcp::connect( host, port );
     ::hulk::core::tcp::non_blocking( fd );
     tcp_transport* transport = new tcp_transport( fd );
-    _eloop.watch( fd, false, *new tcp_callback( *transport ) );
+    _eloop.watch( fd, false, *new tcp_initiator_callback( *transport ) );
     return new TSession( protocol, header, *transport );
+}
+
+void tcp_event_loop::new_acceptor( int port )
+{
+    int fd = ::hulk::core::tcp::bind( port, 1024 );
+    ::hulk::core::tcp::non_blocking( fd );
+    _eloop.watch( fd, true, *new tcp_acceptor_callback() );
 }
 
 int tcp_event_loop::loop( int timeout )

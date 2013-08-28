@@ -16,6 +16,7 @@ class transport
 public:
     inline transport();
     inline void set_session( session& s );
+    inline session* get_session();
     inline void recv( const fields& msg );
     inline void recv( const char* msg, size_t len );
     inline void operator()( const fields& msg );
@@ -48,6 +49,11 @@ void transport::recv( const char* msg, size_t len )
 void transport::set_session( session& s )
 {
     _session = &s;
+}
+
+session* transport::get_session()
+{
+    return _session;
 }
 
 void transport::operator()( const fields& msg )

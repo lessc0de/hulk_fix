@@ -14,12 +14,15 @@ class transport;
 class session
 {
 public:
+    session( transport& );
     session( const value& protocol, const fields& header, transport& );
+    virtual ~session();
+
     void send( const value& msg_type, const fields& msg );
 
     inline transport& get_transport();
 
-    virtual void recv( const fields& msg ) {}
+    virtual void recv( const fields& msg );
 
 private:
     value _protocol;
