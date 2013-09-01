@@ -18,6 +18,8 @@ public:
     session( const value& protocol, const fields& header, transport& );
     virtual ~session();
 
+    void set_protocol( const value& protocol );
+    void set_header( const fields& header );
     void send( const value& msg_type, const fields& msg );
 
     inline transport& get_transport();

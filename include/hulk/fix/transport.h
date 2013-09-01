@@ -5,8 +5,6 @@
 #include "hulk/fix/session.h"
 #include "hulk/fix/decoder.h"
 
-#include <sys/socket.h>
-
 namespace hulk {
 namespace  fix {
 

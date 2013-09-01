@@ -44,7 +44,6 @@ session::session( transport& t )
   _seq_in( 0 ),
   _seq_out( 0 )
 {
-    LOG_INFO( log, "created session @ " << this );
     _transport.set_session( *this );
 }
 
@@ -55,13 +54,21 @@ session::session( const value& protocol, const fields& header, transport& t )
   _seq_in( 0 ),
   _seq_out( 0 )
 {
-    LOG_INFO( log, "created session @ " << this );
     _transport.set_session( *this );
 }
 
 session::~session()
 {
-    LOG_INFO( log, "deleted session @ " << this );
+}
+
+void session::set_protocol( const value& protocol )
+{
+    _protocol = protocol;
+}
+
+void session::set_header( const fields& header )
+{
+    _header = header;
 }
 
 void session::recv( const fields& msg )

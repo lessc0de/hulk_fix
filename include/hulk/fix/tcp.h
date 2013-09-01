@@ -5,6 +5,7 @@
 #include "hulk/core/tcp.h"
 #include "hulk/fix/transport.h"
 
+#include <sys/socket.h>
 #include <map>
 
 namespace hulk {
@@ -37,6 +38,7 @@ struct tcp_initiator_callback : public ::hulk::core::tcp::callback
 };
 
 // -----------------------------------------------------------------------------
+template< class TSession >
 struct tcp_acceptor_callback : public ::hulk::core::tcp::callback
 {
     tcp_acceptor_callback() {}
@@ -55,6 +57,8 @@ class tcp_event_loop
 public:
     template< class TSession >
     TSession* new_initiator( const char* host, int port, const value& protocol, const fields& header );
+
+    template< class TSession >
     void new_acceptor( int port );
 
     int loop( int timeout=0 );
@@ -85,7 +89,8 @@ void tcp_initiator_callback::on_recv( int fd, const char* data, size_t len )
 }
 
 // -----------------------------------------------------------------------------
-void tcp_acceptor_callback::on_close( int fd )
+template< class TSession >
+void tcp_acceptor_callback< TSession >::on_close( int fd )
 {
     transport_map::iterator it = _transports.find( fd );
     if( it != _transports.end() )
@@ -96,14 +101,15 @@ void tcp_acceptor_callback::on_close( int fd )
     }
 }
 
-void tcp_acceptor_callback::on_recv( int fd, const char* data, size_t len )
+template< class TSession >
+void tcp_acceptor_callback< TSession >::on_recv( int fd, const char* data, size_t len )
 {
     tcp_transport* transport;
     transport_map::iterator it = _transports.find( fd );
     if( it == _transports.end() )
     {
         transport = new tcp_transport( fd );
-        new session( *transport );
+        new TSession( *transport );
         _transports[fd] = transport;
     }
     else
@@ -125,11 +131,12 @@ TSession* tcp_event_loop::new_initiator( const char* host, int port, const value
     return new TSession( protocol, header, *transport );
 }
 
+template< class TSession >
 void tcp_event_loop::new_acceptor( int port )
 {
     int fd = ::hulk::core::tcp::bind( port, 1024 );
     ::hulk::core::tcp::non_blocking( fd );
-    _eloop.watch( fd, true, *new tcp_acceptor_callback() );
+    _eloop.watch( fd, true, *new tcp_acceptor_callback< TSession >() );
 }
 
 int tcp_event_loop::loop( int timeout )
