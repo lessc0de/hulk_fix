@@ -20,11 +20,11 @@ public:
 
     void set_protocol( const value& protocol );
     void set_header( const fields& header );
-    void send( const value& msg_type, const fields& msg );
+    void send( const value& msg_type, const fields& msg, std::string* copy_buf=0 );
 
     inline transport& get_transport();
 
-    virtual void recv( const fields& msg );
+    virtual void recv( const fields& msg, const std::string buf );
 
 private:
     value _protocol;

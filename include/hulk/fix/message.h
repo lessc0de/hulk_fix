@@ -2,9 +2,9 @@
 #ifndef _hulk_fix_message_h_
 #define _hulk_fix_message_h_
 
-#include <string>
 #include <sstream>
 #include <vector>
+#include <map>
 
 namespace hulk {
 namespace  fix {
@@ -32,6 +32,16 @@ struct field
 };
 
 typedef std::vector< field > fields;
+
+struct field_map : public std::map< tag, const value* >
+{
+    field_map( const fields& f )
+    {
+        for( int i=0; i<f.size(); i++ ) {
+            (*this)[f[i]._tag] = &f[i]._value;
+        }
+    }
+};
 
 }
 }

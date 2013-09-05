@@ -34,6 +34,7 @@ private:
 
     std::string _tag;
     std::string _val;
+    std::string _buf;
 
     fields _msg;
 };
@@ -44,6 +45,7 @@ void decoder::decode( TCallback cb, const char* msg, size_t size )
     for( size_t i = 0; i < size; i++ )
     {
         char c = msg[i];
+        _buf.push_back( c );
 
         if( _field_state == TAG && c == '=' )
         {
@@ -97,7 +99,8 @@ void decoder::on_field( TCallback cb )
     {
         if( tag == 10 )
         {
-            cb( _msg );
+            _buf.push_back( (char)1 );
+            cb( _msg, _buf );
             init_state();
         }
     }

@@ -71,7 +71,7 @@ void session::set_header( const fields& header )
     _header = header;
 }
 
-void session::recv( const fields& msg )
+void session::recv( const fields& msg, const std::string buf )
 {
     LOG_INFO( log, "recvd " << msg.size() << " fields\n" );
 }
@@ -79,7 +79,7 @@ void session::recv( const fields& msg )
 // TODO
 // encoding is a bit shit
 // too reliant on string streams
-void session::send( const value& msg_type, const fields& body )
+void session::send( const value& msg_type, const fields& body, std::string* copy_buf )
 {
     std::string send_time;
     time_t t = time( 0 );
@@ -117,6 +117,10 @@ void session::send( const value& msg_type, const fields& body )
     msgStr << CHECK_SUM << "=" << buf << DELIM;
 
     s = msgStr.str();
+
+    if( copy_buf ) {
+        *copy_buf = s;
+    }
 
     LOG_INFO( log, "sending: " << s.c_str() );
 

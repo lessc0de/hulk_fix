@@ -15,9 +15,9 @@ public:
     inline transport();
     inline void set_session( session& s );
     inline session* get_session();
-    inline void recv( const fields& msg );
+    inline void recv( const fields& msg, const std::string buf );
     inline void recv( const char* msg, size_t len );
-    inline void operator()( const fields& msg );
+    inline void operator()( const fields& msg, const std::string buf );
 
     virtual void send( const char* msg, size_t len ) {}
     virtual ~transport() {}
@@ -32,10 +32,10 @@ transport::transport() : _session( 0 )
 {
 }
 
-void transport::recv( const fields& msg )
+void transport::recv( const fields& msg, const std::string buf )
 {
     if( _session ) {
-        _session->recv( msg );
+        _session->recv( msg, buf );
     }
 }
 
@@ -54,9 +54,9 @@ session* transport::get_session()
     return _session;
 }
 
-void transport::operator()( const fields& msg )
+void transport::operator()( const fields& msg, const std::string buf )
 {
-    recv( msg );
+    recv( msg, buf );
 }
 
 }
