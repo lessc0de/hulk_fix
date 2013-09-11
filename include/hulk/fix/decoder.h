@@ -13,10 +13,10 @@ class decoder
 public:
     decoder();
 
-    template< class T > void decode( T cb, const char* msg, size_t size );
+    template< class T > void decode( T& cb, const char* msg, size_t size );
 
 private:
-    template< class T > void on_field( T cb );
+    template< class T > void on_field( T& cb );
 
     void init_state();
     bool is_header( tag t );
@@ -40,7 +40,7 @@ private:
 };
 
 template< class TCallback >
-void decoder::decode( TCallback cb, const char* msg, size_t size )
+void decoder::decode( TCallback& cb, const char* msg, size_t size )
 {
     for( size_t i = 0; i < size; i++ )
     {
@@ -75,7 +75,7 @@ void decoder::decode( TCallback cb, const char* msg, size_t size )
 }
 
 template< class TCallback >
-void decoder::on_field( TCallback cb )
+void decoder::on_field( TCallback& cb )
 {
     if( _tag.size() == 0 || _val.size() == 0 ) {
         return; // error
