@@ -43,7 +43,7 @@ struct tcp_acceptor_callback : public ::hulk::core::tcp::callback
 {
     tcp_acceptor_callback() {}
 
-    virtual void on_open( int fd ) {}
+    virtual void on_open( int fd );
     virtual void on_close( int fd );
     virtual void on_recv( int fd, const char* data, size_t len );
 
@@ -90,11 +90,20 @@ void tcp_initiator_callback::on_recv( int fd, const char* data, size_t len )
 
 // -----------------------------------------------------------------------------
 template< class TSession >
+void tcp_acceptor_callback< TSession >::on_open( int fd )
+{
+    tcp_transport* transport = new tcp_transport( fd );
+    new TSession( *transport );
+    _transports[fd] = transport;
+}
+
+template< class TSession >
 void tcp_acceptor_callback< TSession >::on_close( int fd )
 {
     transport_map::iterator it = _transports.find( fd );
     if( it != _transports.end() )
     {
+        it->second->get_session()->closed();
         delete it->second->get_session();
         delete it->second;
         _transports.erase( it );
@@ -104,20 +113,10 @@ void tcp_acceptor_callback< TSession >::on_close( int fd )
 template< class TSession >
 void tcp_acceptor_callback< TSession >::on_recv( int fd, const char* data, size_t len )
 {
-    tcp_transport* transport;
     transport_map::iterator it = _transports.find( fd );
-    if( it == _transports.end() )
-    {
-        transport = new tcp_transport( fd );
-        new TSession( *transport );
-        _transports[fd] = transport;
+    if( it != _transports.end() ) {
+        it->second->recv( data, len );
     }
-    else
-    {
-        transport = it->second;
-    }
-
-    transport->recv( data, len );
 }
 
 // -----------------------------------------------------------------------------

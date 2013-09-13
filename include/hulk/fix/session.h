@@ -25,6 +25,7 @@ public:
     inline transport& get_transport();
 
     virtual void recv( const fields& msg, const std::string buf );
+    virtual void closed() {}
 
 private:
     value _protocol;
