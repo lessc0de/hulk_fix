@@ -32,7 +32,7 @@ struct tcp_initiator_callback : public ::hulk::core::tcp::callback
 
     virtual void on_open( int fd ) {}
     virtual void on_close( int fd ) {}
-    virtual void on_recv( int fd, const char* data, size_t len );
+    inline virtual void on_recv( int fd, const char* data, size_t len );
 
     tcp_transport& _transport;
 };
@@ -45,7 +45,7 @@ struct tcp_acceptor_callback : public ::hulk::core::tcp::callback
 
     virtual void on_open( int fd );
     virtual void on_close( int fd );
-    virtual void on_recv( int fd, const char* data, size_t len );
+    inline virtual void on_recv( int fd, const char* data, size_t len );
 
     typedef std::map< int, tcp_transport* > transport_map;
     transport_map _transports;;
@@ -61,7 +61,7 @@ public:
     template< class TSession >
     void new_acceptor( int port );
 
-    int loop( int timeout=0 );
+    inline int loop( int timeout=0 );
 
 private:
     ::hulk::core::tcp::event_loop _eloop;
