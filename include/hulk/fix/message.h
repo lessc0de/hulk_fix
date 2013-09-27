@@ -19,8 +19,9 @@ struct field
     : _tag( t ), _value( v )
     {
     }
-    
-    field( tag t, int v )
+
+    template< typename T >
+    field( tag t, T v )
     : _tag( t )
     {
         std::stringstream ss; ss << v;

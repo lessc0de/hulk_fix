@@ -3,7 +3,6 @@
 #define _hulk_fix_session_h_
 
 #include "hulk/fix/message.h"
-
 #include <stdint.h>
 
 namespace hulk {

@@ -2,8 +2,8 @@ cmake_minimum_required( VERSION 2.8 )
 project( hulk_fix )
 
 include_directories( include )
-include_directories( ~/hulk-core/include )
-link_directories( ~/hulk-build/core/src )
+include_directories( $ENV{HULK_INSTALL_DIR}/hulk-core/include )
+link_directories( $ENV{HULK_INSTALL_DIR}/hulk-core/lib )
 add_subdirectory( src )
 add_subdirectory( test )
 
