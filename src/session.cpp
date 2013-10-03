@@ -20,7 +20,7 @@ using namespace hulk::fix;
 
 namespace
 {
-core::log& log = core::logger::instance().get( "hulk.fix" );
+log& l = logger::instance().get( "hulk.fix" );
 
 void set_utc_time( std::string& s, time_t* t )
 {
@@ -40,21 +40,21 @@ void set_utc_time( std::string& s, time_t* t )
 }
 
 session::session( transport& t )
-: _transport( t ),
+: _transport( &t ),
   _seq_in( 0 ),
   _seq_out( 0 )
 {
-    _transport.set_session( *this );
+    _transport->set_session( *this );
 }
 
 session::session( const value& protocol, const fields& header, transport& t )
 : _protocol( protocol ),
   _header( header ),
-  _transport( t ),
+  _transport( &t ),
   _seq_in( 0 ),
   _seq_out( 0 )
 {
-    _transport.set_session( *this );
+    _transport->set_session( *this );
 }
 
 session::~session()
@@ -73,7 +73,7 @@ void session::set_header( const fields& header )
 
 void session::recv( const fields& msg, const std::string buf )
 {
-    LOG_INFO( log, "recvd " << msg.size() << " fields\n" );
+    LOG_INFO( l, "recvd " << msg.size() << " fields\n" );
 }
 
 // TODO
@@ -122,7 +122,11 @@ void session::send( const value& msg_type, const fields& body, std::string* copy
         *copy_buf = s;
     }
 
-    LOG_INFO( log, "sending: " << s.c_str() );
+    LOG_INFO( l, "sending: " << s.c_str() );
 
-    _transport.send( s.c_str(), s.size() );
+    if( _transport ) {
+        _transport->send( s.c_str(), s.size() );
+    } else {
+        LOG_DEBUG( l, "no transport available" );
+    }
 }

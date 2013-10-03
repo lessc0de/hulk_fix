@@ -6,7 +6,6 @@
 #include "hulk/fix/transport.h"
 
 #include <sys/socket.h>
-#include <map>
 
 namespace hulk {
 namespace  fix {
@@ -18,7 +17,7 @@ public:
     inline tcp_transport( int fd );
     inline int get_fd();
 
-    inline virtual void send( const char* msg, size_t len );
+    virtual void send( const char* msg, size_t len );
     virtual ~tcp_transport() {}
 
 private:
@@ -26,29 +25,24 @@ private:
 };
 
 // -----------------------------------------------------------------------------
-struct tcp_initiator_callback : public ::hulk::core::tcp::callback
+struct tcp_initiator_callback : public ::hulk::tcp_callback
 {
-    tcp_initiator_callback( tcp_transport& t ) : _transport( t ) {}
+    tcp_initiator_callback( tcp_transport& t );
 
-    virtual void on_open( int fd ) {}
-    virtual void on_close( int fd ) {}
-    inline virtual void on_recv( int fd, const char* data, size_t len );
+    virtual void on_recv( tcp_context& c, const char* data, size_t len );
 
     tcp_transport& _transport;
 };
 
 // -----------------------------------------------------------------------------
 template< class TSession >
-struct tcp_acceptor_callback : public ::hulk::core::tcp::callback
+struct tcp_acceptor_callback : public ::hulk::tcp_callback
 {
     tcp_acceptor_callback() {}
 
-    virtual void on_open( int fd );
-    virtual void on_close( int fd );
-    inline virtual void on_recv( int fd, const char* data, size_t len );
-
-    typedef std::map< int, tcp_transport* > transport_map;
-    transport_map _transports;;
+    virtual void on_open( tcp_context& c );
+    virtual void on_close( tcp_context& c );
+    virtual void on_recv( tcp_context& c, const char* data, size_t len );
 };
 
 // -----------------------------------------------------------------------------
@@ -64,11 +58,12 @@ public:
     inline int loop( int timeout=0 );
 
 private:
-    ::hulk::core::tcp::event_loop _eloop;
+    ::hulk::tcp_event_loop _eloop;
 };
 
 // -----------------------------------------------------------------------------
-tcp_transport::tcp_transport( int fd ) : _fd( fd )
+tcp_transport::tcp_transport( int fd )
+: _fd( fd )
 {
 }
 
@@ -83,48 +78,46 @@ void tcp_transport::send( const char* msg, size_t len )
 }
 
 // -----------------------------------------------------------------------------
-void tcp_initiator_callback::on_recv( int fd, const char* data, size_t len )
+tcp_initiator_callback::tcp_initiator_callback( tcp_transport& t )
+: _transport( t )
+{
+}
+
+void tcp_initiator_callback::on_recv( tcp_context& c, const char* data, size_t len )
 {
     _transport.recv( data, len );
 }
 
 // -----------------------------------------------------------------------------
 template< class TSession >
-void tcp_acceptor_callback< TSession >::on_open( int fd )
+void tcp_acceptor_callback< TSession >::on_open( tcp_context& c )
 {
-    tcp_transport* transport = new tcp_transport( fd );
-    new TSession( *transport );
-    _transports[fd] = transport;
+    tcp_transport* transport = new tcp_transport( c._fd );
+    transport->set_session( *new TSession( *transport ) );
+    c._data = transport;
 }
 
 template< class TSession >
-void tcp_acceptor_callback< TSession >::on_close( int fd )
+void tcp_acceptor_callback< TSession >::on_close( tcp_context& c )
 {
-    transport_map::iterator it = _transports.find( fd );
-    if( it != _transports.end() )
-    {
-        it->second->get_session()->closed();
-        delete it->second->get_session();
-        delete it->second;
-        _transports.erase( it );
-    }
+    tcp_transport* transport = (tcp_transport*)c._data;
+    transport->get_session()->set_transport( 0 );
+    delete transport;
 }
 
 template< class TSession >
-void tcp_acceptor_callback< TSession >::on_recv( int fd, const char* data, size_t len )
+void tcp_acceptor_callback< TSession >::on_recv( tcp_context& c, const char* data, size_t len )
 {
-    transport_map::iterator it = _transports.find( fd );
-    if( it != _transports.end() ) {
-        it->second->recv( data, len );
-    }
+    tcp_transport* transport = (tcp_transport*)c._data;
+    transport->recv( data, len );
 }
 
 // -----------------------------------------------------------------------------
 template< class TSession >
 TSession* tcp_event_loop::new_initiator( const char* host, int port, const value& protocol, const fields& header )
 {
-    int fd = ::hulk::core::tcp::connect( host, port );
-    ::hulk::core::tcp::non_blocking( fd );
+    int fd = ::hulk::tcp_connect( host, port );
+    ::hulk::tcp_non_blocking( fd );
     tcp_transport* transport = new tcp_transport( fd );
     _eloop.watch( fd, false, *new tcp_initiator_callback( *transport ) );
     return new TSession( protocol, header, *transport );
@@ -133,8 +126,8 @@ TSession* tcp_event_loop::new_initiator( const char* host, int port, const value
 template< class TSession >
 void tcp_event_loop::new_acceptor( int port )
 {
-    int fd = ::hulk::core::tcp::bind( port, 1024 );
-    ::hulk::core::tcp::non_blocking( fd );
+    int fd = ::hulk::tcp_bind( port, 1024 );
+    ::hulk::tcp_non_blocking( fd );
     _eloop.watch( fd, true, *new tcp_acceptor_callback< TSession >() );
 }
 

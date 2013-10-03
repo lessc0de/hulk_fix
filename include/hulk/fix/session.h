@@ -21,7 +21,8 @@ public:
     void set_header( const fields& header );
     void send( const value& msg_type, const fields& msg, std::string* copy_buf=0 );
 
-    inline transport& get_transport();
+    inline void set_transport( transport* transport );
+    inline transport* get_transport();
 
     virtual void recv( const fields& msg, const std::string buf );
     virtual void closed() {}
@@ -30,16 +31,21 @@ private:
     value _protocol;
     fields _header;
 
-    transport& _transport;
+    transport* _transport;
 
     uint64_t _seq_in;
     uint64_t _seq_out;
 
 };
 
-transport& session::get_transport()
+transport* session::get_transport()
 {
     return _transport;
+}
+
+void session::set_transport( transport* transport )
+{
+    _transport = transport;
 }
 
 }
