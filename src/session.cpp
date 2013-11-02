@@ -39,22 +39,20 @@ void set_utc_time( std::string& s, time_t* t )
 }
 }
 
-session::session( transport& t )
-: _transport( &t ),
+session::session() : //transport_callback(),
+  _transport( 0 ),
   _seq_in( 0 ),
   _seq_out( 0 )
 {
-    _transport->set_session( *this );
 }
 
-session::session( const value& protocol, const fields& header, transport& t )
-: _protocol( protocol ),
+session::session( const value& protocol, const fields& header ) : //transport_callback(),
+  _protocol( protocol ),
   _header( header ),
-  _transport( &t ),
+  _transport( 0 ),
   _seq_in( 0 ),
   _seq_out( 0 )
 {
-    _transport->set_session( *this );
 }
 
 session::~session()
@@ -69,6 +67,11 @@ void session::set_protocol( const value& protocol )
 void session::set_header( const fields& header )
 {
     _header = header;
+}
+
+void session::set_transport( transport* transport )
+{
+    _transport = transport;
 }
 
 void session::recv( const fields& msg, const std::string buf )

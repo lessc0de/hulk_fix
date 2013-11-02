@@ -19,18 +19,17 @@ private:
     template< class T > void on_field( T& cb );
 
     void init_state();
-    bool is_header( tag t );
 
     enum field_state {
         TAG, VALUE
     };
 
-    enum messager_state {
+    enum message_state {
         SEEK_HEADER, SEEK_CHECKSUM
     };
 
     field_state _field_state;
-    messager_state _message_state;
+    message_state _message_state;
 
     std::string _tag;
     std::string _val;
