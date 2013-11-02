@@ -14,9 +14,10 @@ class session;
 class transport
 {
 public:
+    friend class decoder;
+
     virtual ~transport();
 
-    void send( const fields& );
     void recv( const fields& );
     void recv( const char*, size_t );
 
@@ -27,9 +28,9 @@ public:
     virtual void close() {}     // user wants to close the transport
     virtual void closed() {}    // transport was closed
 
+private:
     void operator()( const fields& msg, const std::string& buf );
 
-private:
     shared_ptr< session > _session;      // recvd messages will be passed to this session
     decoder _decoder;
 };

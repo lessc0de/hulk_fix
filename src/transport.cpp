@@ -10,11 +10,6 @@ transport::~transport()
     close();
 }
 
-void transport::send( const fields& msg )
-{
-    // send( msg -> char array )
-}
-
 void transport::recv( const char* data, size_t len )
 {
     _decoder.decode( *this, data, len );
