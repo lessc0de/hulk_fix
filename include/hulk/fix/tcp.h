@@ -16,9 +16,9 @@ class transport_callback;
 class tcp_event_loop
 {
 public:
-    void new_initiator( const char* host, int port, shared_ptr< session >& );
-    void new_initiator( const char* host, int port, transport_callback& );
-    void new_acceptor( int port, transport_callback& );
+    void new_initiator( const char* host, int port, const shared_ptr< session >& );
+    void new_initiator( const char* host, int port, const shared_ptr< transport_callback >& );
+    void new_acceptor( int port, const shared_ptr< transport_callback >& );
 
     int loop( int timeout=0 );
 

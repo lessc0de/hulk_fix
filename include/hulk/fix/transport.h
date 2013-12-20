@@ -1,4 +1,3 @@
-
 #ifndef _hulk_fix_transport_h_
 #define _hulk_fix_transport_h_
 
@@ -21,12 +20,13 @@ public:
     void recv( const fields& );
     void recv( const char*, size_t );
 
-    void attach( shared_ptr< session >& );
+    bool attached();
+    void attach( const shared_ptr< session >& );
     void detach();
 
     virtual void send( const char*, size_t ) {}
     virtual void close() {}     // user wants to close the transport
-    virtual void closed() {}    // transport was closed
+    virtual void closed();      // transport was closed
 
 private:
     void operator()( const fields& msg, const std::string& buf );

@@ -15,6 +15,10 @@ typedef std::string value;
 
 struct field
 {
+    field()
+    {
+    }
+
     field( tag t, const value& v )
     : _tag( t ), _value( v )
     {

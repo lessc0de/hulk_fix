@@ -4,14 +4,14 @@
 
 #include "hulk/core/shared_ptr.h"
 #include "hulk/fix/message.h"
-#include "hulk/fix/transport_callback.h"
+#include <stdint.h>
 
 namespace hulk {
 namespace  fix {
 
 class transport;
 
-class session : public transport_callback
+class session
 {
 public:
     friend class transport;
@@ -24,7 +24,7 @@ public:
     void set_header( const fields& header );
     void send( const value& msg_type, const fields& msg, std::string* copy_buf=0 );
 
-    virtual void recv( const fields& msg, const std::string buf );
+    virtual void on_recv( const fields& msg, const std::string buf );
 
 private:
     void set_transport( transport* transport );
@@ -36,7 +36,6 @@ private:
 
     uint64_t _seq_in;
     uint64_t _seq_out;
-
 };
 
 }

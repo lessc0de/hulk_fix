@@ -20,11 +20,16 @@ void transport::recv( const fields& msg )
     if( _session )
     {
         std::string str;
-        _session->recv( msg, str );
+        _session->on_recv( msg, str );
     }
 }
 
-void transport::attach( shared_ptr< session >& s )
+bool transport::attached()
+{
+    return _session;
+}
+
+void transport::attach( const shared_ptr< session >& s )
 {
     _session = s;
     _session->set_transport( this );
@@ -37,6 +42,11 @@ void transport::detach()
         _session->set_transport( 0 );
         _session.reset();
     }
+}
+
+void transport::closed()
+{
+    detach();
 }
 
 void transport::operator()( const fields& msg, const std::string& buf )

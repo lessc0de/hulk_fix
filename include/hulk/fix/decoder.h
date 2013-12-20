@@ -4,6 +4,7 @@
 
 #include "hulk/fix/message.h"
 #include <cstdlib>
+#include <cctype>
 
 namespace hulk {
 namespace  fix {
@@ -41,34 +42,44 @@ private:
 template< class TCallback >
 void decoder::decode( TCallback& cb, const char* msg, size_t size )
 {
-    for( size_t i = 0; i < size; i++ )
+    for( size_t i = 0; i < size; ++i )
     {
         char c = msg[i];
-        _buf.push_back( c );
 
-        if( _field_state == TAG && c == '=' )
+        if( _field_state == TAG )
         {
-            // if we get an equals assume next character is a fix value
-            _field_state = VALUE;
+            if( c == '=' )
+            {
+                // got the tag now look for the value
+                _field_state = VALUE;
+            }
+            else
+            if( !isdigit( c ) )
+            {
+                // non numeric data should cause us to start looking for the tag afresh
+                _tag.clear();
+            }
+            else
+            {
+                _tag.push_back( c );
+            }
         }
         else
-        if( c == (char)1 )
         {
-            // if we get a 1 assume we now have a complete fix field
-            on_field( cb );
+            if( c == (char)1 )
+            {
+                // if we get a 1 assume we now have a complete fix field
+                on_field( cb );
 
-            // reset state so we start looking for next tag
-            _field_state = TAG;
-            _tag.clear();
-            _val.clear();
-        }
-        else
-        {
-            _field_state == TAG ? _tag.push_back( c ) : _val.push_back( c );
-
-            // todo
-            // shouldn't allow tag / value to grow indefinately
-            // throw an exception if they get too big
+                // reset state so we start looking for next tag
+                _field_state = TAG;
+                _tag.clear();
+                _val.clear();
+            }
+            else
+            {
+                _val.push_back( c );
+            }
         }
     }
 }
@@ -77,14 +88,19 @@ template< class TCallback >
 void decoder::on_field( TCallback& cb )
 {
     if( _tag.size() == 0 || _val.size() == 0 ) {
-        return; // error
+        return;
     }
 
     tag tag = atoi( _tag.c_str() );
 
     if( tag <= 0 ) {
-        return; // error
+        return;
     }
+
+    _buf.append( _tag );
+    _buf.append( "=" );
+    _buf.append( _val );
+    _buf.append( "\x1" );
 
     _msg.push_back( field( tag, _val ) );
 
@@ -98,7 +114,6 @@ void decoder::on_field( TCallback& cb )
     {
         if( tag == 10 )
         {
-            _buf.push_back( (char)1 );
             cb( _msg, _buf );
             init_state();
         }
@@ -109,4 +124,3 @@ void decoder::on_field( TCallback& cb )
 }
 
 #endif
-
